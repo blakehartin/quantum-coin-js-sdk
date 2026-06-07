@@ -202,8 +202,8 @@ Creates a config class
 
 | Param | Type | Description |
 | --- | --- | --- |
-| readUrl | <code>string</code> | The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.readrelay.quantumcoinapi.com |
-| writeUrl | <code>string</code> | The Write API URL pointing to a write relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.writerelay.quantumcoinapi.com |
+| readUrl | <code>string</code> | The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.readrelay.quantumcoinapi.com |
+| writeUrl | <code>string</code> | The Write API URL pointing to a write relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.writerelay.quantumcoinapi.com |
 | chainId | <code>number</code> | The chain id of the blockchain. Mainnet chainId is 123123. Testnet T4 chainId is 310324. |
 | readApiKey | <code>string</code> | Optional parameter if authorization is enabled for the relay service. API Key for authorization. Defaults to null which indicates no authorization. |
 | writeApiKey | <code>string</code> | Optional parameter if authorization is enabled for the relay service. API Key for authorization. Defaults to null which indicates no authorization. |
@@ -211,14 +211,14 @@ Creates a config class
 <a name="module_quantum-coin-js-sdk..Config+readUrl"></a>
 
 #### config.readUrl : <code>string</code>
-The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay
+The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay
 
 **Kind**: instance property of [<code>Config</code>](#module_quantum-coin-js-sdk..Config)  
 **Access**: public  
 <a name="module_quantum-coin-js-sdk..Config+writeUrl"></a>
 
 #### config.writeUrl : <code>string</code>
-The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay
+The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay
 
 **Kind**: instance property of [<code>Config</code>](#module_quantum-coin-js-sdk..Config)  
 **Access**: public  
@@ -246,7 +246,7 @@ API Key for authorization if authorization is enabled for the relay service. Def
 <a name="module_quantum-coin-js-sdk..Wallet"></a>
 
 ### quantum-coin-js-sdk~Wallet
-This class represents a Wallet. Use the verifyWallet function to verify if a wallet is valid. Verifying the wallet is highly recommended, especially if it comes from an untrusted source. For more details on the underlying cryptography of the Wallet, see https://github.com/QuantumCoinProject/hybrid-pqc
+This class represents a Wallet. Use the verifyWallet function to verify if a wallet is valid. Verifying the wallet is highly recommended, especially if it comes from an untrusted source. For more details on the underlying cryptography of the Wallet, see https://github.com/quantumcoinproject/circl
 
 **Kind**: inner class of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
 **Access**: public  
