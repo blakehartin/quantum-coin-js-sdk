@@ -171,21 +171,21 @@ export function postTransaction(txnData: string): Promise<SendResult>;
 export class Config {
     /**
      * Creates a config class
-     * @param {string} readUrl - The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.readrelay.quantumcoinapi.com
-     * @param {string} writeUrl - The Write API URL pointing to a write relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.writerelay.quantumcoinapi.com
+     * @param {string} readUrl - The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.readrelay.quantumcoinapi.com
+     * @param {string} writeUrl - The Write API URL pointing to a write relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.writerelay.quantumcoinapi.com
      * @param {number} chainId - The chain id of the blockchain. Mainnet chainId is 123123. Testnet T4 chainId is 310324.
      * @param {string} readApiKey - Optional parameter if authorization is enabled for the relay service. API Key for authorization. Defaults to null which indicates no authorization.
      * @param {string} writeApiKey - Optional parameter if authorization is enabled for the relay service. API Key for authorization. Defaults to null which indicates no authorization.
      */
     constructor(readUrl: string, writeUrl: string, chainId: number, readApiKey: string, writeApiKey: string);
     /**
-     * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay
+     * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay
      * @type {string}
      * @public
     */
     public readUrl: string;
     /**
-     * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay
+     * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay
      * @type {string}
      * @public
     */
@@ -213,7 +213,7 @@ export class Config {
  * @class
  * @constructor
  * @public
- * @classdesc This class represents a Wallet. Use the verifyWallet function to verify if a wallet is valid. Verifying the wallet is highly recommended, especially if it comes from an untrusted source. For more details on the underlying cryptography of the Wallet, see https://github.com/QuantumCoinProject/hybrid-pqc
+ * @classdesc This class represents a Wallet. Use the verifyWallet function to verify if a wallet is valid. Verifying the wallet is highly recommended, especially if it comes from an untrusted source. For more details on the underlying cryptography of the Wallet, see https://github.com/quantumcoinproject/circl
  */
 export class Wallet {
     /**

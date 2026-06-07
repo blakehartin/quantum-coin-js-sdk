@@ -56,7 +56,7 @@ const BASE_SEED_BYTES_HYBRIDEDMLDSASLHDSA = 64;
 const MIN_PASSPHRASE_LENGTH = 12;
 const INVALID_KEY_TYPE = -1001;
 const CIRCL_CRYPTO_FAILURE = -1002;
-const EXPECTED_WASM_SHA256 = "bcab6389db37af9cc6538fb54a872f416131392d3ad5ea23a0969d8aac3b1c85";
+const EXPECTED_WASM_SHA256 = "17aff465c5879e2ff94d33e8ce9d98d6ad6a70849b3e3cad7cccbcc9728e5a02";
 
 /**
  * @class
@@ -67,8 +67,8 @@ const EXPECTED_WASM_SHA256 = "bcab6389db37af9cc6538fb54a872f416131392d3ad5ea23a0
 class Config {
     /**
      * Creates a config class
-     * @param {string} readUrl - The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.readrelay.quantumcoinapi.com
-     * @param {string} writeUrl - The Write API URL pointing to a write relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.writerelay.quantumcoinapi.com
+     * @param {string} readUrl - The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.readrelay.quantumcoinapi.com
+     * @param {string} writeUrl - The Write API URL pointing to a write relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay. The following URLs are community maintained. Please use your own relay service. Mainnet: https://sdk.writerelay.quantumcoinapi.com
      * @param {number} chainId - The chain id of the blockchain. Mainnet chainId is 123123. Testnet T4 chainId is 310324.
      * @param {string} readApiKey - Optional parameter if authorization is enabled for the relay service. API Key for authorization. Defaults to null which indicates no authorization.
      * @param {string} writeApiKey - Optional parameter if authorization is enabled for the relay service. API Key for authorization. Defaults to null which indicates no authorization.
@@ -76,14 +76,14 @@ class Config {
     
     constructor(readUrl, writeUrl, chainId, readApiKey, writeApiKey) {
         /**
-         * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay
+         * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay
          * @type {string}
          * @public
         */
         this.readUrl = readUrl;
 
         /**
-         * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/dogep/relay
+         * The Read API URL pointing to a read relay. See https://github.com/quantumcoinproject/quantum-coin-go/tree/main/relay
          * @type {string}
          * @public
         */
@@ -116,7 +116,7 @@ class Config {
  * @class
  * @constructor
  * @public
- * @classdesc This class represents a Wallet. Use the verifyWallet function to verify if a wallet is valid. Verifying the wallet is highly recommended, especially if it comes from an untrusted source. For more details on the underlying cryptography of the Wallet, see https://github.com/QuantumCoinProject/hybrid-pqc
+ * @classdesc This class represents a Wallet. Use the verifyWallet function to verify if a wallet is valid. Verifying the wallet is highly recommended, especially if it comes from an untrusted source. For more details on the underlying cryptography of the Wallet, see https://github.com/quantumcoinproject/circl
  */
 class Wallet {
     /**
@@ -885,7 +885,7 @@ async function InitAccountsWebAssembly() {
         delete g.circl;
         if (circl.hybridedmldsaslhdsa) Object.freeze(circl.hybridedmldsaslhdsa);
         if (circl.hybridedmldsaslhdsa5) Object.freeze(circl.hybridedmldsaslhdsa5);
-        if (circl.hybridedmldsaslhds5) Object.freeze(circl.hybridedmldsaslhds5);
+        if (circl.hybridedmldsaslhdsa5) Object.freeze(circl.hybridedmldsaslhdsa5);
         if (circl.hybrideds) Object.freeze(circl.hybrideds);
         Object.freeze(circl);
     }
@@ -1001,7 +1001,7 @@ function getKeyTypeFromPrivateKey(privateKey) {
     }
     const len = privateKey.length;
     const hybridNs = circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5;
+    const hybrid5Ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5;
     if (hybridNs && len === hybridNs.PrivateKeySize) {
         return KEY_TYPE_HYBRIDEDMLDSASLHDSA;
     }
@@ -1022,7 +1022,7 @@ function getKeyTypeFromPublicKey(publicKey) {
     }
     const len = publicKey.byteLength !== undefined ? publicKey.byteLength : publicKey.length;
     const hybridNs = circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5;
+    const hybrid5Ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5;
     if (hybridNs && typeof hybridNs.PublicKeySize === 'number' && len === hybridNs.PublicKeySize) {
         return KEY_TYPE_HYBRIDEDMLDSASLHDSA;
     }
@@ -1059,7 +1059,7 @@ function newWallet(keyType) {
         keyType = KEY_TYPE_HYBRIDEDMLDSASLHDSA;
     }
     const hybridNs = circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5;
+    const hybrid5Ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5;
     let res;
     if (keyType === KEY_TYPE_HYBRIDEDMLDSASLHDSA && hybridNs) {
         res = hybridNs.generateKey();
@@ -1150,7 +1150,7 @@ function openWalletFromSeed(seedArray) {
         if (!expandedRes || !expandedRes.result) return null;
         keyPairRes = ns.newKeyFromSeed(expandedRes.result);
     } else if (len === BASE_SEED_BYTES_HYBRIDEDMLDSASLHDSA5) {
-        const ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5;
+        const ns = circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5;
         if (!ns) return null;
         expandedRes = ns.expandSeed(seedU8);
         if (expandedRes && expandedRes.error) return null;
@@ -1417,7 +1417,7 @@ function verifyWallet(wallet) {
         return false;
     }
     const hybridNs = circl && circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5);
+    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5);
     if (keyType === KEY_TYPE_HYBRIDEDMLDSASLHDSA && hybridNs && wallet.privateKey.length !== hybridNs.PrivateKeySize) {
         return false;
     }
@@ -2330,7 +2330,7 @@ function signRawTransaction(transactionSigningRequest) {
     let sigRes;
     let verRes;
     const hybridNs = circl && circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5);
+    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5);
     if (signingContext === 0 && hybridNs) {
         sigRes = hybridNs.signCompact(privU8, txSigningHashU8);
         if (sigRes && sigRes.error) return new SignResult(-915, null, null);
@@ -2380,7 +2380,7 @@ function sign(privateKey, message, signingContext) {
     const privU8 = toUint8Array(privateKey);
     const messageU8 = toUint8Array(message);
     const hybridNs = circl && circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5);
+    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5);
     let sigRes;
     const ctx = signingContext === null || signingContext === undefined ? null : signingContext;
     if (ctx === null) {
@@ -2437,7 +2437,7 @@ function verify(publicKey, signature, message) {
     const messageU8 = toUint8Array(message);
     const hybridedsNs = circl && circl.hybrideds;
     const hybridNs = circl && circl.hybridedmldsaslhdsa;
-    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhds5);
+    const hybrid5Ns = circl && (circl.hybridedmldsaslhdsa5 || circl.hybridedmldsaslhdsa5);
     let verRes;
     if (sigType === 1 && hybridedsNs) {
         verRes = hybridedsNs.verifyCompact(pubU8, messageU8, sigU8);
