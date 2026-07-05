@@ -204,19 +204,65 @@ export function addressFromPublicKey(publicKey: number[]): string;
 /**
  * The scryptDeriveKey function derives a key from a secret and salt using the scrypt KDF.
  *
- * Note: Only the specific scrypt parameter set N=262144, r=8, p=1, dkLen=32 is supported
- * currently. Passing any other values returns null.
+ * Arbitrary scrypt parameters are supported. The classic set N=262144, r=8, p=1, dkLen=32
+ * remains fully supported and byte-for-byte compatible with previous versions.
  *
  * @function scryptDeriveKey
- * @param {string} secret - The secret/passphrase to derive the key from.
+ * @param {string|Uint8Array|number[]} secret - The secret/passphrase. A string is encoded as UTF-8 bytes.
  * @param {Uint8Array|number[]} salt - The salt as a byte array.
- * @param {number} N - The scrypt CPU/memory cost parameter. Must be 262144.
- * @param {number} r - The scrypt block size parameter. Must be 8.
- * @param {number} p - The scrypt parallelization parameter. Must be 1.
- * @param {number} dkLen - The derived key length in bytes. Must be 32.
- * @return {number[]} - Returns the 32-byte derived key as a byte array. Returns null if the operation failed or the parameters are unsupported.
+ * @param {number} N - The scrypt CPU/memory cost parameter (power of two, > 1).
+ * @param {number} r - The scrypt block size parameter.
+ * @param {number} p - The scrypt parallelization parameter.
+ * @param {number} dkLen - The derived key length in bytes.
+ * @return {number[]} - Returns the derived key as a byte array. Returns null if the operation failed or the parameters are invalid.
  */
-export function scryptDeriveKey(secret: string, salt: Uint8Array | number[], N: number, r: number, p: number, dkLen: number): number[];
+export function scryptDeriveKey(secret: string | Uint8Array | number[], salt: Uint8Array | number[], N: number, r: number, p: number, dkLen: number): number[];
+/**
+ * The sha256 function computes the SHA-256 digest of the input.
+ *
+ * @function sha256
+ * @param {string|Uint8Array|number[]} data - The data to hash (string -> UTF-8 bytes).
+ * @return {number[]} - The 32-byte digest as a byte array. Returns null on invalid input.
+ */
+export function sha256(data: string | Uint8Array | number[]): number[];
+/**
+ * The sha512 function computes the SHA-512 digest of the input.
+ *
+ * @function sha512
+ * @param {string|Uint8Array|number[]} data - The data to hash (string -> UTF-8 bytes).
+ * @return {number[]} - The 64-byte digest as a byte array. Returns null on invalid input.
+ */
+export function sha512(data: string | Uint8Array | number[]): number[];
+/**
+ * The ripemd160 function computes the RIPEMD-160 digest of the input.
+ *
+ * @function ripemd160
+ * @param {string|Uint8Array|number[]} data - The data to hash (string -> UTF-8 bytes).
+ * @return {number[]} - The 20-byte digest as a byte array. Returns null on invalid input.
+ */
+export function ripemd160(data: string | Uint8Array | number[]): number[];
+/**
+ * The computeHmac function computes an HMAC over the data using the given key.
+ *
+ * @function computeHmac
+ * @param {string} algorithm - The hash algorithm: "sha256" or "sha512".
+ * @param {string|Uint8Array|number[]} key - The HMAC key (string -> UTF-8 bytes).
+ * @param {string|Uint8Array|number[]} data - The data to authenticate (string -> UTF-8 bytes).
+ * @return {number[]} - The HMAC as a byte array. Returns null on invalid input.
+ */
+export function computeHmac(algorithm: string, key: string | Uint8Array | number[], data: string | Uint8Array | number[]): number[];
+/**
+ * The pbkdf2 function derives a key using PBKDF2.
+ *
+ * @function pbkdf2
+ * @param {string|Uint8Array|number[]} password - The password (string -> UTF-8 bytes).
+ * @param {Uint8Array|number[]} salt - The salt as a byte array.
+ * @param {number} iterations - The iteration count (positive integer).
+ * @param {number} keylen - The derived key length in bytes (positive integer).
+ * @param {string} algorithm - The PRF hash algorithm: "sha256" or "sha512".
+ * @return {number[]} - The derived key as a byte array. Returns null on invalid input.
+ */
+export function pbkdf2(password: string | Uint8Array | number[], salt: Uint8Array | number[], iterations: number, keylen: number, algorithm: string): number[];
 /**
  * The combinePublicKeySignature combines the public key and signature.
  *

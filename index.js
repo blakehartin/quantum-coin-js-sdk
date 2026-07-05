@@ -33,7 +33,6 @@
 
 var wasmexec = require('./wasm_exec');
 var wasmBase64 = require('./wasmBase64');
-const crypto = require("crypto");
 var seedwords = require('seed-words');
 
 var config = null;
@@ -66,7 +65,7 @@ const SCRYPT_SUPPORTED_P = 1;
 const SCRYPT_SUPPORTED_DKLEN = 32;
 const INVALID_KEY_TYPE = -1001;
 const CIRCL_CRYPTO_FAILURE = -1002;
-const EXPECTED_WASM_SHA256 = "17aff465c5879e2ff94d33e8ce9d98d6ad6a70849b3e3cad7cccbcc9728e5a02";
+const EXPECTED_WASM_SHA256 = "8902a254d13930a8c82aa256468f7a72d613888b9032afb47e9430223886a052";
 
 /**
  * @class
@@ -332,7 +331,11 @@ function getGlobalObject() {
 }
 
 async function InitAccountsWebAssembly() {
-    const go = new global.Go();
+    const GoCtor = getGlobalObject().Go;
+    if (typeof GoCtor !== 'function') {
+        throw new Error("Go WASM runtime not found (wasm_exec.js not loaded)");
+    }
+    const go = new GoCtor();
     let mod, inst;
     var base64wasm = wasmBase64.getBase64Wasm();
 
@@ -342,7 +345,11 @@ async function InitAccountsWebAssembly() {
     }
     const wasmBytes = Uint8Array.from(atob(base64wasm), c => c.charCodeAt(0));
 
-    const hashHex = crypto.createHash('sha256').update(wasmBytes).digest('hex');
+    // Platform-agnostic integrity check via the Web Crypto API (available in
+    // browsers and Node 16+ as globalThis.crypto.subtle). Runs before the WASM
+    // is initialized, so it cannot use the WASM's own Sha256.
+    const digest = await getGlobalObject().crypto.subtle.digest('SHA-256', wasmBytes);
+    const hashHex = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
     if (hashHex !== EXPECTED_WASM_SHA256) {
         throw new Error("WASM integrity check failed");
     }
@@ -860,6 +867,27 @@ function isByteArray(array) {
     if (array.byteLength !== undefined) return true;
     if (typeof array.length === 'number' && array.length >= 0) return true;
     return false;
+}
+
+// Normalizes a bytes-like value (Uint8Array or number[]) to a Uint8Array.
+// Returns null for unsupported inputs.
+function toU8Bytes(value) {
+    if (value instanceof Uint8Array) {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return Uint8Array.from(value);
+    }
+    return null;
+}
+
+// Normalizes a secret-like value (string -> UTF-8 bytes, or bytes-like) to a
+// Uint8Array. Returns null for unsupported inputs.
+function toU8Secret(value) {
+    if (typeof value === 'string' || value instanceof String) {
+        return new TextEncoder().encode(String(value));
+    }
+    return toU8Bytes(value);
 }
 
 /**
@@ -1626,24 +1654,25 @@ function addressFromPublicKey(publicKey) {
 /**
  * The scryptDeriveKey function derives a key from a secret and salt using the scrypt KDF.
  *
- * Note: Only the specific scrypt parameter set N=262144, r=8, p=1, dkLen=32 is supported
- * currently. Passing any other values returns null.
+ * Arbitrary scrypt parameters are supported. The classic set N=262144, r=8, p=1, dkLen=32
+ * remains fully supported and byte-for-byte compatible with previous versions.
  *
  * @function scryptDeriveKey
- * @param {string} secret - The secret/passphrase to derive the key from.
+ * @param {string|Uint8Array|number[]} secret - The secret/passphrase. A string is encoded as UTF-8 bytes.
  * @param {Uint8Array|number[]} salt - The salt as a byte array.
- * @param {number} N - The scrypt CPU/memory cost parameter. Must be 262144.
- * @param {number} r - The scrypt block size parameter. Must be 8.
- * @param {number} p - The scrypt parallelization parameter. Must be 1.
- * @param {number} dkLen - The derived key length in bytes. Must be 32.
- * @return {number[]} - Returns the 32-byte derived key as a byte array. Returns null if the operation failed or the parameters are unsupported.
+ * @param {number} N - The scrypt CPU/memory cost parameter (power of two, > 1).
+ * @param {number} r - The scrypt block size parameter.
+ * @param {number} p - The scrypt parallelization parameter.
+ * @param {number} dkLen - The derived key length in bytes.
+ * @return {number[]} - Returns the derived key as a byte array. Returns -1000 before initialize(), or null if the operation failed or the parameters are invalid.
  */
 function scryptDeriveKey(secret, salt, N, r, p, dkLen) {
     if (isInitialized === false) {
         return -1000;
     }
 
-    if (typeof secret !== 'string' && !(secret instanceof String)) {
+    const secretU8 = toU8Secret(secret);
+    if (secretU8 === null) {
         return null;
     }
 
@@ -1655,19 +1684,133 @@ function scryptDeriveKey(secret, salt, N, r, p, dkLen) {
         return null;
     }
 
-    if (N !== SCRYPT_SUPPORTED_N || r !== SCRYPT_SUPPORTED_R || p !== SCRYPT_SUPPORTED_P || dkLen !== SCRYPT_SUPPORTED_DKLEN) {
-        return null;
-    }
-
     const saltU8 = salt instanceof Uint8Array ? salt : new Uint8Array(salt);
+    const secretBase64 = bytesToBase64(secretU8);
     const saltBase64 = bytesToBase64(saltU8);
 
-    const derivedBase64 = Scrypt(secret, saltBase64);
+    const derivedBase64 = Scrypt(secretBase64, saltBase64, N, r, p, dkLen);
     if (derivedBase64 == null || (typeof derivedBase64 !== 'string' && !(derivedBase64 instanceof String))) {
         return null;
     }
 
     return Array.from(base64ToBytes(derivedBase64));
+}
+
+/**
+ * Computes a hash digest using the given WASM hash call.
+ * @param {function(string): *} wasmCall - Thunk invoking the WASM global with a base64 string.
+ *   Passed as a thunk so the (bare) WASM global is only referenced after the
+ *   isInitialized guard - before WASM init the global does not exist.
+ * @param {string|Uint8Array|number[]} data - Data to hash (string -> UTF-8 bytes).
+ * @return {number[]|number|null} Byte array digest, -1000 before init, or null on invalid input.
+ */
+function _digest(wasmCall, data) {
+    if (isInitialized === false) {
+        return -1000;
+    }
+    const dataU8 = toU8Secret(data);
+    if (dataU8 === null) {
+        return null;
+    }
+    const outBase64 = wasmCall(bytesToBase64(dataU8));
+    if (outBase64 == null || (typeof outBase64 !== 'string' && !(outBase64 instanceof String))) {
+        return null;
+    }
+    return Array.from(base64ToBytes(outBase64));
+}
+
+/**
+ * The sha256 function computes the SHA-256 digest of the input.
+ *
+ * @function sha256
+ * @param {string|Uint8Array|number[]} data - The data to hash (string -> UTF-8 bytes).
+ * @return {number[]} - The 32-byte digest as a byte array. Returns -1000 before initialize(), or null on invalid input.
+ */
+function sha256(data) {
+    return _digest((b64) => Sha256(b64), data);
+}
+
+/**
+ * The sha512 function computes the SHA-512 digest of the input.
+ *
+ * @function sha512
+ * @param {string|Uint8Array|number[]} data - The data to hash (string -> UTF-8 bytes).
+ * @return {number[]} - The 64-byte digest as a byte array. Returns -1000 before initialize(), or null on invalid input.
+ */
+function sha512(data) {
+    return _digest((b64) => Sha512(b64), data);
+}
+
+/**
+ * The ripemd160 function computes the RIPEMD-160 digest of the input.
+ *
+ * @function ripemd160
+ * @param {string|Uint8Array|number[]} data - The data to hash (string -> UTF-8 bytes).
+ * @return {number[]} - The 20-byte digest as a byte array. Returns -1000 before initialize(), or null on invalid input.
+ */
+function ripemd160(data) {
+    return _digest((b64) => Ripemd160(b64), data);
+}
+
+/**
+ * The computeHmac function computes an HMAC over the data using the given key.
+ *
+ * @function computeHmac
+ * @param {string} algorithm - The hash algorithm: "sha256" or "sha512".
+ * @param {string|Uint8Array|number[]} key - The HMAC key (string -> UTF-8 bytes).
+ * @param {string|Uint8Array|number[]} data - The data to authenticate (string -> UTF-8 bytes).
+ * @return {number[]} - The HMAC as a byte array. Returns -1000 before initialize(), or null on invalid input.
+ */
+function computeHmac(algorithm, key, data) {
+    if (isInitialized === false) {
+        return -1000;
+    }
+    if (typeof algorithm !== 'string' && !(algorithm instanceof String)) {
+        return null;
+    }
+    const keyU8 = toU8Secret(key);
+    const dataU8 = toU8Secret(data);
+    if (keyU8 === null || dataU8 === null) {
+        return null;
+    }
+    const outBase64 = ComputeHmac(String(algorithm), bytesToBase64(keyU8), bytesToBase64(dataU8));
+    if (outBase64 == null || (typeof outBase64 !== 'string' && !(outBase64 instanceof String))) {
+        return null;
+    }
+    return Array.from(base64ToBytes(outBase64));
+}
+
+/**
+ * The pbkdf2 function derives a key using PBKDF2.
+ *
+ * @function pbkdf2
+ * @param {string|Uint8Array|number[]} password - The password (string -> UTF-8 bytes).
+ * @param {Uint8Array|number[]} salt - The salt as a byte array.
+ * @param {number} iterations - The iteration count (positive integer).
+ * @param {number} keylen - The derived key length in bytes (positive integer).
+ * @param {string} algorithm - The PRF hash algorithm: "sha256" or "sha512".
+ * @return {number[]} - The derived key as a byte array. Returns -1000 before initialize(), or null on invalid input.
+ */
+function pbkdf2(password, salt, iterations, keylen, algorithm) {
+    if (isInitialized === false) {
+        return -1000;
+    }
+    const passwordU8 = toU8Secret(password);
+    if (passwordU8 === null || isByteArray(salt) === false) {
+        return null;
+    }
+    if (typeof iterations !== 'number' || typeof keylen !== 'number') {
+        return null;
+    }
+    if (typeof algorithm !== 'string' && !(algorithm instanceof String)) {
+        return null;
+    }
+    const saltU8 = salt instanceof Uint8Array ? salt : new Uint8Array(salt);
+    const outBase64 = Pbkdf2(bytesToBase64(passwordU8), bytesToBase64(saltU8), iterations, keylen, String(algorithm));
+    if (outBase64 == null || (typeof outBase64 !== 'string' && !(outBase64 instanceof String))) {
+        return null;
+    }
+    return Array.from(base64ToBytes(outBase64));
 }
 
 /**
@@ -2158,6 +2301,11 @@ module.exports = {
     publicKeyFromPrivateKey,
     addressFromPublicKey,
     scryptDeriveKey,
+    sha256,
+    sha512,
+    ripemd160,
+    computeHmac,
+    pbkdf2,
     combinePublicKeySignature,
     TransactionSigningRequest,
     signRawTransaction,

@@ -29,6 +29,10 @@ qcsdk.initialize(clientConfigVal).then((initResult) => {
 Example Project: https://github.com/quantumcoinproject/quantum-coin-js-sdk/tree/main/example
 ```
 
+## Browser usage
+
+The SDK runs in modern browsers as well as Node.js (Node 16+ / a browser with WebAssembly and the Web Crypto API). Load `wasm_exec.js` before `index.js` (or bundle them together) and call `initialize()` as usual.
+
 * [quantum-coin-js-sdk](#module_quantum-coin-js-sdk)
     * [~Config](#module_quantum-coin-js-sdk..Config)
         * [new Config(chainId)](#new_module_quantum-coin-js-sdk..Config_new)
@@ -93,6 +97,11 @@ Example Project: https://github.com/quantumcoinproject/quantum-coin-js-sdk/tree/
     * [~publicKeyFromPrivateKey(privateKey)](#module_quantum-coin-js-sdk..publicKeyFromPrivateKey) ⇒ <code>string</code>
     * [~addressFromPublicKey(publicKey)](#module_quantum-coin-js-sdk..addressFromPublicKey) ⇒ <code>string</code>
     * [~scryptDeriveKey(secret, salt, N, r, p, dkLen)](#module_quantum-coin-js-sdk..scryptDeriveKey) ⇒ <code>Array.&lt;number&gt;</code>
+    * [~sha256(data)](#module_quantum-coin-js-sdk..sha256) ⇒ <code>Array.&lt;number&gt;</code>
+    * [~sha512(data)](#module_quantum-coin-js-sdk..sha512) ⇒ <code>Array.&lt;number&gt;</code>
+    * [~ripemd160(data)](#module_quantum-coin-js-sdk..ripemd160) ⇒ <code>Array.&lt;number&gt;</code>
+    * [~computeHmac(algorithm, key, data)](#module_quantum-coin-js-sdk..computeHmac) ⇒ <code>Array.&lt;number&gt;</code>
+    * [~pbkdf2(password, salt, iterations, keylen, algorithm)](#module_quantum-coin-js-sdk..pbkdf2) ⇒ <code>Array.&lt;number&gt;</code>
     * [~combinePublicKeySignature(publicKey, signature)](#module_quantum-coin-js-sdk..combinePublicKeySignature) ⇒ <code>string</code>
     * [~packMethodData(abiJSON, methodName, ...args)](#module_quantum-coin-js-sdk..packMethodData) ⇒ <code>PackUnpackResult</code>
     * [~unpackMethodData(abiJSON, methodName, hexData)](#module_quantum-coin-js-sdk..unpackMethodData) ⇒ <code>PackUnpackResult</code>
@@ -800,19 +809,85 @@ The addressFromPublicKey returns the address corresponding to the public key.
 ### quantum-coin-js-sdk~scryptDeriveKey(secret, salt, N, r, p, dkLen) ⇒ <code>Array.&lt;number&gt;</code>
 The scryptDeriveKey function derives a key from a secret and salt using the scrypt KDF.
 
-Note: Only the specific scrypt parameter set N=262144, r=8, p=1, dkLen=32 is supported currently. Passing any other values returns null.
+Arbitrary scrypt parameters are supported. The classic set N=262144, r=8, p=1, dkLen=32 remains fully supported and byte-for-byte compatible with previous versions.
 
 **Kind**: inner method of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
-**Returns**: <code>Array.&lt;number&gt;</code> - - Returns the 32-byte derived key as a byte array. Returns null if the operation failed or the parameters are unsupported.  
+**Returns**: <code>Array.&lt;number&gt;</code> - - Returns the derived key as a byte array. Returns -1000 before initialize(), or null if the operation failed or the parameters are invalid.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| secret | <code>string</code> | The secret/passphrase to derive the key from. |
+| secret | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The secret/passphrase. A string is encoded as UTF-8 bytes. |
 | salt | <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The salt as a byte array. |
-| N | <code>number</code> | The scrypt CPU/memory cost parameter. Must be 262144. |
-| r | <code>number</code> | The scrypt block size parameter. Must be 8. |
-| p | <code>number</code> | The scrypt parallelization parameter. Must be 1. |
-| dkLen | <code>number</code> | The derived key length in bytes. Must be 32. |
+| N | <code>number</code> | The scrypt CPU/memory cost parameter (power of two, > 1). |
+| r | <code>number</code> | The scrypt block size parameter. |
+| p | <code>number</code> | The scrypt parallelization parameter. |
+| dkLen | <code>number</code> | The derived key length in bytes. |
+
+<a name="module_quantum-coin-js-sdk..sha256"></a>
+
+### quantum-coin-js-sdk~sha256(data) ⇒ <code>Array.&lt;number&gt;</code>
+The sha256 function computes the SHA-256 digest of the input.
+
+**Kind**: inner method of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
+**Returns**: <code>Array.&lt;number&gt;</code> - - The 32-byte digest as a byte array. Returns -1000 before initialize(), or null on invalid input.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The data to hash (string -> UTF-8 bytes). |
+
+<a name="module_quantum-coin-js-sdk..sha512"></a>
+
+### quantum-coin-js-sdk~sha512(data) ⇒ <code>Array.&lt;number&gt;</code>
+The sha512 function computes the SHA-512 digest of the input.
+
+**Kind**: inner method of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
+**Returns**: <code>Array.&lt;number&gt;</code> - - The 64-byte digest as a byte array. Returns -1000 before initialize(), or null on invalid input.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The data to hash (string -> UTF-8 bytes). |
+
+<a name="module_quantum-coin-js-sdk..ripemd160"></a>
+
+### quantum-coin-js-sdk~ripemd160(data) ⇒ <code>Array.&lt;number&gt;</code>
+The ripemd160 function computes the RIPEMD-160 digest of the input.
+
+**Kind**: inner method of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
+**Returns**: <code>Array.&lt;number&gt;</code> - - The 20-byte digest as a byte array. Returns -1000 before initialize(), or null on invalid input.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The data to hash (string -> UTF-8 bytes). |
+
+<a name="module_quantum-coin-js-sdk..computeHmac"></a>
+
+### quantum-coin-js-sdk~computeHmac(algorithm, key, data) ⇒ <code>Array.&lt;number&gt;</code>
+The computeHmac function computes an HMAC over the data using the given key.
+
+**Kind**: inner method of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
+**Returns**: <code>Array.&lt;number&gt;</code> - - The HMAC as a byte array. Returns -1000 before initialize(), or null on invalid input.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| algorithm | <code>string</code> | The hash algorithm: "sha256" or "sha512". |
+| key | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The HMAC key (string -> UTF-8 bytes). |
+| data | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The data to authenticate (string -> UTF-8 bytes). |
+
+<a name="module_quantum-coin-js-sdk..pbkdf2"></a>
+
+### quantum-coin-js-sdk~pbkdf2(password, salt, iterations, keylen, algorithm) ⇒ <code>Array.&lt;number&gt;</code>
+The pbkdf2 function derives a key using PBKDF2.
+
+**Kind**: inner method of [<code>quantum-coin-js-sdk</code>](#module_quantum-coin-js-sdk)  
+**Returns**: <code>Array.&lt;number&gt;</code> - - The derived key as a byte array. Returns -1000 before initialize(), or null on invalid input.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| password | <code>string</code> \| <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The password (string -> UTF-8 bytes). |
+| salt | <code>Uint8Array</code> \| <code>Array.&lt;number&gt;</code> | The salt as a byte array. |
+| iterations | <code>number</code> | The iteration count (positive integer). |
+| keylen | <code>number</code> | The derived key length in bytes (positive integer). |
+| algorithm | <code>string</code> | The PRF hash algorithm: "sha256" or "sha512". |
 
 <a name="module_quantum-coin-js-sdk..combinePublicKeySignature"></a>
 
