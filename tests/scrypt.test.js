@@ -10,9 +10,6 @@ const assert = require('node:assert/strict');
 const qcsdk = require('..');
 
 const MAINNET_CHAIN_ID = 123123;
-const READ_RELAY_URL = 'https://sdk.readrelay.quantumcoinapi.com';
-const WRITE_RELAY_URL = 'https://sdk.writerelay.quantumcoinapi.com';
-
 const SALT = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
 // Supported scrypt parameters.
@@ -34,7 +31,7 @@ describe('scryptDeriveKey (pre-init)', () => {
 
 describe('scryptDeriveKey', () => {
   before(async () => {
-    const cfg = new qcsdk.Config(READ_RELAY_URL, WRITE_RELAY_URL, MAINNET_CHAIN_ID, '', '');
+    const cfg = new qcsdk.Config(MAINNET_CHAIN_ID);
     const initResult = await qcsdk.initialize(cfg);
     assert.equal(initResult, true, 'SDK initialize should succeed');
   });
